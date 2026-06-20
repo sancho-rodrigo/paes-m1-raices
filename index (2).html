@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrenamiento PAES M1 | Raíces, diagonales y Pitágoras</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root{
+      --bg:#eef6ff;
+      --card:#ffffff;
+      --ink:#0b2857;
+      --ink2:#153b6c;
+      --muted:#52657a;
+      --line:#c8d8f0;
+      --accent:#7d6dcc;
+      --accent2:#2f9f9a;
+      --good:#15803d;
+      --warn:#b45309;
+      --bad:#b91c1c;
+      --soft:#fff6d9;
+      --soft2:#eefbef;
+      --shadow:0 16px 40px rgba(24, 50, 93, .14);
+      --radius:22px;
+      --fontScale:1;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(255,255,255,.9), transparent 28%),
+        linear-gradient(180deg, #f9fcff 0%, var(--bg) 52%, #e8f2ff 100%);
+      font-size:calc(16px * var(--fontScale));
+    }
+    body.high-contrast{
+      --bg:#050816; --card:#0f172a; --ink:#f8fafc; --ink2:#f8fafc; --muted:#cbd5e1; --line:#94a3b8; --accent:#facc15; --accent2:#38bdf8; --soft:#172554; --soft2:#064e3b; --shadow:none;
+      background:#050816;
+    }
+    .rain-bg{position:fixed; inset:0; pointer-events:none; opacity:.42; z-index:-1; overflow:hidden;}
+    .drop{position:absolute; width:4px; height:16px; border-radius:99px; background:#aacbe8; animation:fall 8s linear infinite;}
+    @keyframes fall{from{transform:translateY(-30px)}to{transform:translateY(110vh)}}
+    .app{max-width:1220px; margin:0 auto; padding:18px;}
+    header{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:16px;
+      align-items:center;
+      background:rgba(255,255,255,.76);
+      backdrop-filter:blur(10px);
+      border:2px solid #d6ddff;
+      border-radius:28px;
+      padding:14px 16px;
+      box-shadow:var(--shadow);
+    }
+    body.high-contrast header{background:var(--card); border-color:#fff;}
+    .logo{width:62px; height:86px; object-fit:contain; background:#fff; border-radius:12px; padding:4px; border:1px solid #dfe7f6;}
+    h1{font-size:clamp(1.6rem, 3.8vw, 3.2rem); line-height:1.02; margin:0; color:var(--ink); letter-spacing:.2px;}
+    .subtitle{color:var(--muted); font-weight:700; margin-top:6px;}
+    .teacher-chip{align-self:stretch; min-width:210px; display:flex; flex-direction:column; justify-content:center; gap:8px;}
+    input, select, button{font:inherit;}
+    .nameInput{width:100%; padding:10px 12px; border-radius:14px; border:2px solid var(--line); color:var(--ink); background:var(--card);}
+    .topTools{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+    button{border:0; border-radius:16px; padding:11px 14px; cursor:pointer; color:#fff; background:var(--ink); font-weight:800; box-shadow:0 8px 18px rgba(12,40,86,.12);}
+    button.secondary{background:#e9f0ff; color:var(--ink); border:1px solid var(--line); box-shadow:none;}
+    button.soft{background:var(--soft); color:var(--ink); border:1px solid #f3d87a; box-shadow:none;}
+    button.good{background:var(--good)}
+    button.warn{background:var(--warn)}
+    button:disabled{opacity:.55; cursor:not-allowed;}
+    .grid{display:grid; grid-template-columns:310px 1fr; gap:18px; margin-top:18px;}
+    .panel{background:rgba(255,255,255,.86); border:2px solid #d6ddff; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);}
+    body.high-contrast .panel{background:var(--card); border-color:#fff;}
+    .statGrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .stat{background:#f5f8ff; border:1px solid var(--line); border-radius:16px; padding:10px; min-height:70px;}
+    body.high-contrast .stat{background:#111827;}
+    .stat b{display:block; font-size:1.35rem; margin-top:2px; color:var(--ink2);}
+    .progressOuter{height:12px; background:#dce6f8; border-radius:99px; overflow:hidden; margin-top:8px;}
+    .progressInner{height:100%; width:0%; background:linear-gradient(90deg, var(--accent2), var(--accent)); transition:.3s;}
+    .sectionTitle{font-size:1.1rem; margin:18px 0 10px; color:var(--ink2);}
+    .modeList,.moduleList{display:flex; flex-direction:column; gap:9px;}
+    .choiceCard{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:18px; padding:12px; text-align:left; box-shadow:none; width:100%;}
+    .choiceCard.active{border-color:var(--accent); background:#f3f1ff;}
+    body.high-contrast .choiceCard.active{background:#1e1b4b;}
+    .mainGrid{display:grid; grid-template-columns:1.2fr .9fr; gap:16px;}
+    .heroCard{border-radius:24px; background:linear-gradient(135deg, #fff, #f7fbff); border:2px solid var(--line); padding:18px;}
+    body.high-contrast .heroCard{background:#111827;}
+    .tag{display:inline-flex; gap:6px; align-items:center; border-radius:99px; padding:6px 10px; font-weight:900; font-size:.86rem; margin:0 6px 6px 0; border:1px solid var(--line); background:#f5f8ff; color:var(--ink);}
+    .tag.paes{background:#ffecc1; border-color:#e7be55; color:#5b3a00;}
+    .tag.concept{background:#dcfce7; border-color:#86efac; color:#14532d;}
+    body.high-contrast .tag{background:#0f172a;color:#fff;border-color:#fff;}
+    .questionBox{margin-top:12px; padding:14px; border-radius:20px; border:2px solid var(--line); background:#fff;}
+    body.high-contrast .questionBox{background:#0b1120;}
+    .questionText{font-size:1.12rem; line-height:1.55; font-weight:750;}
+    .options{display:grid; gap:10px; margin-top:14px;}
+    .optionBtn{background:#f8fbff; color:var(--ink); border:2px solid var(--line); border-radius:16px; text-align:left; padding:14px 16px; box-shadow:none; font-weight:800;}
+    .optionBtn:hover{border-color:var(--accent);}
+    .optionBtn.correct{background:#dcfce7; border-color:#16a34a; color:#14532d;}
+    .optionBtn.wrong{background:#fee2e2; border-color:#dc2626; color:#7f1d1d;}
+    .feedback{margin-top:12px; border-radius:18px; padding:13px; background:#f8fafc; border:1px solid var(--line); line-height:1.55;}
+    body.high-contrast .feedback{background:#111827;}
+    .visualBox{min-height:320px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:24px; background:#f7fbff; border:2px dashed var(--line); padding:12px; overflow:hidden;}
+    body.high-contrast .visualBox{background:#111827;}
+    svg{max-width:100%; height:auto;}
+    .learnContent{line-height:1.55; color:var(--ink);}
+    .formulaCard{background:#fff; border:2px solid var(--line); border-radius:18px; padding:14px; margin-top:10px;}
+    body.high-contrast .formulaCard{background:#111827;}
+    .examBar{display:none; margin:12px 0; padding:12px; background:#fff8dd; border:1px solid #f1cd60; border-radius:16px; font-weight:850;}
+    body.high-contrast .examBar{background:#1e293b;}
+    .badges{display:flex; flex-wrap:wrap; gap:8px;}
+    .badge{border-radius:999px; padding:7px 10px; background:#edf7ff; border:1px solid var(--line); font-weight:850; font-size:.9rem;}
+    .footerNote{margin-top:16px; padding:14px; background:var(--soft); border:1px solid #f0d37b; border-radius:18px; line-height:1.5;}
+    .answerExplain ol{margin:8px 0 0 20px; padding:0;}
+    .answerExplain li{margin:4px 0;}
+    .recommendation{background:var(--soft2); border:1px solid #99e2a5; border-radius:16px; padding:12px; margin-top:10px; line-height:1.45;}
+    .kbd{font-weight:900; padding:2px 6px; border-radius:7px; background:#e7efff;}
+    .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+    @media (max-width: 930px){
+      header{grid-template-columns:auto 1fr;}
+      .teacher-chip{grid-column:1 / -1; min-width:0;}
+      .grid{grid-template-columns:1fr;}
+      .mainGrid{grid-template-columns:1fr;}
+      .visualBox{min-height:230px;}
+    }
+    @media (max-width: 560px){
+      .app{padding:10px;}
+      header{border-radius:20px;}
+      .logo{width:50px;height:72px;}
+      .statGrid{grid-template-columns:1fr 1fr;}
+      button{width:100%;}
+      .topTools button{width:auto; flex:1 1 120px;}
+    }
+  </style>
+</head>
+<body>
+<div class="rain-bg" aria-hidden="true" id="rain"></div>
+<div class="app">
+  <header>
+    <img class="logo" src="data:image/png;base64,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" alt="Logo Liceo Isidora Zegers" />
+    <div>
+      <h1>Entrenamiento PAES M1: raíces</h1>
+      <div class="subtitle">Raíces cuadradas, diagonales, Pitágoras y problemas tipo evaluación</div>
+      <div class="topTools" aria-label="herramientas de accesibilidad">
+        <button class="secondary" id="fontMinus">A−</button>
+        <button class="secondary" id="fontPlus">A+</button>
+        <button class="secondary" id="contrastBtn">Alto contraste</button>
+        <button class="secondary" id="readBtn">Leer pregunta</button>
+        <button class="soft" id="resetBtn">Reiniciar progreso</button>
+      </div>
+    </div>
+    <div class="teacher-chip">
+      <label for="studentName"><b>Nombre de estudiante</b></label>
+      <input id="studentName" class="nameInput" placeholder="Escribe tu nombre" />
+      <small>Docente: Rodrigo Sancho · Matemática · 4° medio</small>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="panel" aria-label="panel de avance">
+      <h2 class="sectionTitle">Progreso</h2>
+      <div class="statGrid">
+        <div class="stat">XP <b id="xpVal">0</b></div>
+        <div class="stat">Nivel <b id="levelVal">Principiante</b></div>
+        <div class="stat">Monedas <b id="coinsVal">0</b></div>
+        <div class="stat">Racha <b id="streakVal">0</b></div>
+        <div class="stat">Vidas <b id="livesVal">5</b></div>
+        <div class="stat">Precisión <b id="accVal">0%</b></div>
+      </div>
+      <div class="progressOuter" aria-label="barra de progreso de nivel"><div class="progressInner" id="levelProgress"></div></div>
+
+      <h2 class="sectionTitle">Modo de juego</h2>
+      <div class="modeList" id="modeList"></div>
+
+      <h2 class="sectionTitle">Módulos</h2>
+      <div class="moduleList" id="moduleList"></div>
+
+      <h2 class="sectionTitle">Insignias</h2>
+      <div class="badges" id="badges"></div>
+      <div class="recommendation" id="recommendation">Responde una pregunta para recibir una recomendación.</div>
+    </aside>
+
+    <main class="panel" aria-label="zona principal de aprendizaje">
+      <div class="mainGrid">
+        <section class="heroCard">
+          <div id="lessonPanel" class="learnContent"></div>
+          <div class="examBar" id="examBar"></div>
+          <div class="questionBox" id="questionBox">
+            <div id="questionMeta"></div>
+            <div class="questionText" id="questionText">Selecciona un modo y presiona “Nueva pregunta”.</div>
+            <div class="options" id="options"></div>
+            <div class="topTools">
+              <button id="newQuestionBtn" class="good">Nueva pregunta</button>
+              <button id="hintBtn" class="warn">Pista</button>
+              <button id="showSolutionBtn" class="secondary">Ver desarrollo</button>
+            </div>
+            <div class="feedback" id="feedback">Elige una alternativa para recibir retroalimentación.</div>
+          </div>
+        </section>
+        <section class="visualBox" id="visualBox" aria-label="visualización matemática">
+          <p>La visualización aparecerá aquí.</p>
+        </section>
+      </div>
+      <div class="footerNote"><b>Idea clave:</b> en PAES M1 muchas raíces aparecen como una longitud: lado de un cuadrado, diagonal, cable, tensor, hipotenusa o cateto.</div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* APP JS */
+(() => {
+  "use strict";
+  const tex = String.raw;
+  const $ = (id) => document.getElementById(id);
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = (arr) => arr.map(v => ({v, r: Math.random()})).sort((a,b)=>a.r-b.r).map(o=>o.v);
+  const m = (s) => `\\(${s}\\)`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const sq = (n) => n*n;
+  const fmtRoot = (n) => m(tex`\sqrt{${n}}`);
+  const fmtFullRootSum = (a,b) => m(tex`\sqrt{${a}^{2}+${b}^{2}}`);
+  const fmtFullRootDiff = (c,b) => m(tex`\sqrt{${c}^{2}-${b}^{2}}`);
+
+  const modes = {
+    practice: {name:"Práctica", desc:"Pistas libres y retroalimentación completa.", points:10, hintCost:0},
+    challenge:{name:"Desafío", desc:"Más puntaje; la pista usa monedas.", points:20, hintCost:2},
+    survival:{name:"Supervivencia", desc:"Comienzas con 5 vidas; cada error resta una.", points:25, hintCost:3},
+    exam:{name:"Examen", desc:"Prueba mixta con reporte final.", points:15, hintCost:4},
+    boss:{name:"Jefe final", desc:"Problema integrador de mayor puntaje.", points:50, hintCost:5}
+  };
+
+  const modules = [
+    {id:"fund", name:"1. Fundamentos", desc:"Raíz principal, cuadrados perfectos y área."},
+    {id:"ops", name:"2. Operatoria", desc:"Productos, simplificación y errores frecuentes."},
+    {id:"geo", name:"3. Geometría", desc:"Pitágoras, diagonales, cables y prismas."},
+    {id:"mix", name:"4. Integración PAES", desc:"Problemas tipo PAES M1 con lectura de contexto."},
+    {id:"concept", name:"5. Conceptual", desc:"Comprensión de definiciones, propiedades y decisiones."}
+  ];
+
+  const defaultState = {
+    name:"", xp:0, coins:10, streak:0, lives:5, correct:0, wrong:0,
+    mode:"practice", module:"fund", badges:[], fontScale:1, highContrast:false,
+    byModule:{fund:{c:0,w:0}, ops:{c:0,w:0}, geo:{c:0,w:0}, mix:{c:0,w:0}, concept:{c:0,w:0}}
+  };
+  let state = loadState();
+  let current = null;
+  let answered = false;
+  let exam = {active:false, total:12, index:0, correct:0, wrong:0, timer:null, seconds:0};
+
+  function loadState(){
+    try{ return {...defaultState, ...(JSON.parse(localStorage.getItem("paesRootsAppState") || "{}"))}; }
+    catch(e){ return {...defaultState}; }
+  }
+  function saveState(){ localStorage.setItem("paesRootsAppState", JSON.stringify(state)); }
+  function typeset(){ if(window.MathJax && window.MathJax.typesetPromise){ window.MathJax.typesetPromise(); } }
+
+  function initRain(){
+    const rain = $("rain");
+    rain.innerHTML = "";
+    for(let i=0;i<28;i++){
+      const d=document.createElement("span"); d.className="drop";
+      d.style.left = rnd(2,98)+"%"; d.style.top = rnd(-50,80)+"%"; d.style.animationDelay = (Math.random()*8).toFixed(2)+"s"; d.style.opacity = (0.18+Math.random()*0.45).toFixed(2);
+      rain.appendChild(d);
+    }
+  }
+
+  function levelName(xp){
+    if(xp>=1200) return "Maestra del contenido";
+    if(xp>=850) return "Experta";
+    if(xp>=560) return "Analista";
+    if(xp>=320) return "Estratega";
+    if(xp>=140) return "Exploradora";
+    return "Principiante";
+  }
+  function nextLevelProgress(xp){
+    const marks=[0,140,320,560,850,1200,1500];
+    let prev=0,next=140;
+    for(let i=0;i<marks.length-1;i++){ if(xp>=marks[i] && xp<marks[i+1]){prev=marks[i]; next=marks[i+1]; break;} }
+    if(xp>=1200) return 100;
+    return Math.max(0, Math.min(100, Math.round((xp-prev)/(next-prev)*100)));
+  }
+  function addBadge(name){
+    if(!state.badges.includes(name)){ state.badges.push(name); }
+  }
+  function updateBadges(){
+    const total = state.correct + state.wrong;
+    if(total>=1) addBadge("Inicio seguro");
+    if(state.streak>=5) addBadge("Racha de fuego");
+    if(total>=10 && state.correct/total>=0.8) addBadge("Precisión alta");
+    Object.entries(state.byModule).forEach(([mod,v])=>{ if(v.c>=5 && v.w<=2) addBadge("Módulo dominado"); });
+    if(exam.active===false && total>=20 && state.correct>=12) addBadge("Examen sólido");
+  }
+  function renderStats(){
+    updateBadges(); saveState();
+    const total = state.correct + state.wrong;
+    $("xpVal").textContent = state.xp;
+    $("levelVal").textContent = levelName(state.xp);
+    $("coinsVal").textContent = state.coins;
+    $("streakVal").textContent = state.streak;
+    $("livesVal").textContent = state.lives;
+    $("accVal").textContent = total ? Math.round(state.correct/total*100)+"%" : "0%";
+    $("levelProgress").style.width = nextLevelProgress(state.xp)+"%";
+    $("badges").innerHTML = state.badges.length ? state.badges.map(b=>`<span class="badge">${esc(b)}</span>`).join("") : `<span class="badge">Sin insignias aún</span>`;
+    $("studentName").value = state.name || "";
+    document.documentElement.style.setProperty("--fontScale", state.fontScale);
+    document.body.classList.toggle("high-contrast", !!state.highContrast);
+    updateRecommendation();
+  }
+  function updateRecommendation(){
+    const total = state.correct + state.wrong;
+    if(total===0){ $("recommendation").textContent = "Responde una pregunta para recibir una recomendación."; return; }
+    const worst = Object.entries(state.byModule).map(([k,v])=>({k, total:v.c+v.w, acc:(v.c+v.w)?v.c/(v.c+v.w):1})).sort((a,b)=>a.acc-b.acc)[0];
+    const name = modules.find(m=>m.id===worst.k)?.name || "el módulo seleccionado";
+    if(total>=6 && worst.acc < .65){ $("recommendation").textContent = `Reforzar ${name}. Revisa el ejemplo guiado y responde 5 preguntas adicionales antes de pasar al modo examen.`; }
+    else if(state.streak>=4){ $("recommendation").textContent = "Buen avance: intenta el modo desafío o el jefe final para integrar contenidos."; }
+    else { $("recommendation").textContent = "Continúa en modo práctica. Usa la pista antes de responder si no identificas qué representa la raíz."; }
+  }
+
+  function renderSelectors(){
+    $("modeList").innerHTML = Object.entries(modes).map(([id,m]) => `<button class="choiceCard ${state.mode===id?'active':''}" data-mode="${id}"><b>${m.name}</b><br><small>${m.desc}</small></button>`).join("");
+    $("moduleList").innerHTML = modules.map(mod => `<button class="choiceCard ${state.module===mod.id?'active':''}" data-module="${mod.id}"><b>${mod.name}</b><br><small>${mod.desc}</small></button>`).join("");
+    document.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>{ state.mode=btn.dataset.mode; if(state.mode==="survival") state.lives=5; if(state.mode==="exam") startExam(); else stopExam(); saveState(); renderAll(); newQuestion(); }));
+    document.querySelectorAll("[data-module]").forEach(btn=>btn.addEventListener("click",()=>{ state.module=btn.dataset.module; saveState(); renderAll(); newQuestion(); }));
+  }
+
+  function lessonHTML(){
+    const mod = state.module;
+    if(mod==="fund") return `
+      <span class="tag">Módulo 1</span><span class="tag concept">Base conceptual</span>
+      <h2>Raíz cuadrada principal</h2>
+      <p>La raíz cuadrada principal de un número no negativo es el número no negativo que, elevado al cuadrado, produce ese valor.</p>
+      <div class="formulaCard">${m(tex`\sqrt{a}=x \Longleftrightarrow x\geq 0 \text{ y } x^2=a`)}</div>
+      <p><b>En PAES:</b> esta idea aparece cuando se calcula el lado de un cuadrado desde su área.</p>`;
+    if(mod==="ops") return `
+      <span class="tag">Módulo 2</span><span class="tag paes">Tipo PAES M1</span>
+      <h2>Operatoria y errores frecuentes</h2>
+      <p>Se debe distinguir entre multiplicar raíces y sumar cantidades dentro de una raíz.</p>
+      <div class="formulaCard">${m(tex`\sqrt{a}\cdot\sqrt{b}=\sqrt{ab}`)}<br>${m(tex`\sqrt{a+b}\neq\sqrt{a}+\sqrt{b}`)}</div>
+      <p>Otro patrón frecuente es la diferencia de cuadrados: ${m(tex`(\sqrt{a}+b)(\sqrt{a}-b)=a-b^2`)}.</p>`;
+    if(mod==="geo") return `
+      <span class="tag">Módulo 3</span><span class="tag paes">Tipo PAES M1</span>
+      <h2>Pitágoras y diagonales</h2>
+      <p>Si buscas la hipotenusa, sumas cuadrados. Si buscas un cateto, restas cuadrados.</p>
+      <div class="formulaCard">${m(tex`c=\sqrt{a^2+b^2}`)}<br>${m(tex`a=\sqrt{c^2-b^2}`)}<br>${m(tex`d=l\sqrt{2}`)}</div>`;
+    if(mod==="mix") return `
+      <span class="tag">Módulo 4</span><span class="tag paes">Integración PAES M1</span>
+      <h2>Problemas contextualizados</h2>
+      <p>Lee el contexto, identifica la medida pedida y decide si la raíz representa lado, diagonal, hipotenusa o cateto.</p>
+      <div class="formulaCard">${m(tex`D=\sqrt{a^2+b^2+c^2}`)}<br>${m(tex`d(t)=\frac{a\cdot t^2}{2}`)}</div>`;
+    return `
+      <span class="tag">Módulo conceptual</span><span class="tag concept">Comprensión</span>
+      <h2>Decisiones matemáticas</h2>
+      <p>Estas preguntas verifican si comprendes la definición, la interpretación de una raíz y el uso correcto de fórmulas.</p>
+      <div class="formulaCard">Pregunta clave: ¿qué representa la raíz en este problema?</div>`;
+  }
+
+  function makeOptions(correct, wrongs){
+    const opts = shuffle([correct, ...wrongs.slice(0,3)]);
+    return {options: opts, answer: opts.indexOf(correct)};
+  }
+  function mk(prompt, correct, wrongs, explanation, hint, visual, module, isPAES=true, pattern=""){
+    const o = makeOptions(correct, wrongs);
+    return {prompt, options:o.options, answer:o.answer, explanation, hint, visual, module, isPAES, pattern};
+  }
+  function simpRoot(n){
+    let outside=1, inside=n;
+    for(let k=Math.floor(Math.sqrt(n)); k>=2; k--){
+      if(n%(k*k)===0){ outside=k; inside=n/(k*k); break; }
+    }
+    if(inside===1) return String(outside);
+    return outside===1 ? tex`\sqrt{${inside}}` : tex`${outside}\sqrt{${inside}}`;
+  }
+
+  function genFund(){
+    const t = rnd(1,5);
+    if(t===1){
+      const n=choice([6,7,8,9,10,11,12,13,14,15]);
+      return mk(`¿Cuál es el valor de ${m(tex`\sqrt{${n*n}}`)}?`, String(n), [String(n*n), String(2*n), String(n-1)],
+        [`Identificamos el cuadrado perfecto: ${m(tex`${n}^2=${n*n}`)}.`, `Como la raíz principal es no negativa, ${m(tex`\sqrt{${n*n}}=${n}`)}.`],
+        "Busca el número que elevado al cuadrado produce la cantidad subradical.", {type:"square", side:n, area:n*n}, "fund", false, "raíz principal");
+    }
+    if(t===2){
+      const n=choice([9,12,14,16,18]);
+      return mk(`Un cuadrado tiene área ${m(tex`${n*n}\text{ cm}^2`)}. ¿Cuál es la medida de su lado?`, `${n} cm`, [`${n*n} cm`, `${2*n} cm`, `${n+2} cm`],
+        [`El área de un cuadrado es ${m(tex`A=l^2`)}.`, `Entonces ${m(tex`l=\sqrt{${n*n}}=${n}`)}.`, `El lado mide ${n} cm.`],
+        "Si conoces el área de un cuadrado, calcula la raíz cuadrada del área.", {type:"square", side:n, area:n*n}, "fund", true, "área → lado");
+    }
+    if(t===3){
+      const n=choice([8,10,11,13]);
+      return mk(`Un cuadrado tiene área ${m(tex`${n*n}\text{ cm}^2`)}. ¿Cuál es su perímetro?`, `${4*n} cm`, [`${n} cm`, `${2*n} cm`, `${n*n} cm`],
+        [`Primero calculamos el lado: ${m(tex`l=\sqrt{${n*n}}=${n}`)}.`, `Luego el perímetro es ${m(tex`P=4l=4\cdot ${n}=${4*n}`)}.`],
+        "Primero encuentra el lado; después calcula el perímetro.", {type:"square", side:n, area:n*n}, "fund", true, "perímetro desde área");
+    }
+    if(t===4){
+      const n=choice([5,6,7,8,9]);
+      return mk(`¿Cuál de las siguientes afirmaciones sobre ${m(tex`\sqrt{${n*n}}`)} es correcta?`, `${m(tex`\sqrt{${n*n}}=${n}`)} porque la raíz principal es no negativa.`, [`${m(tex`\sqrt{${n*n}}=\pm ${n}`)} porque todo cuadrado tiene dos raíces.`, `${m(tex`\sqrt{${n*n}}=-${n}`)} porque también cumple al elevarse al cuadrado.`, `${m(tex`\sqrt{${n*n}}=${n*n}`)} porque se conserva el número.`],
+        [`La raíz cuadrada principal entrega un valor no negativo.`, `Aunque ${m(tex`(-${n})^2=${n*n}`)}, se cumple ${m(tex`\sqrt{${n*n}}=${n}`)}.`],
+        "Recuerda: el símbolo radical √ representa la raíz principal.", {type:"formula", text:m(tex`\sqrt{a}=x,\; x\geq 0`)}, "fund", false, "raíz principal");
+    }
+    const n=choice([20,45,75,98,125]);
+    const s=simpRoot(n);
+    return mk(`¿Cuál es la forma simplificada de ${m(tex`\sqrt{${n}}`)}?`, m(s), [fmtRoot(n), m(tex`${Math.floor(Math.sqrt(n))}\sqrt{${n}}`), String(n)],
+      [`Buscamos un factor cuadrado perfecto dentro de ${n}.`, `Se obtiene ${m(tex`\sqrt{${n}}=${s}`)}.`],
+      "Descompón la cantidad subradical usando un cuadrado perfecto.", {type:"formula", text:m(tex`\sqrt{${n}}=${s}`)}, "fund", false, "simplificación básica");
+  }
+
+  function genOps(){
+    const t=rnd(1,5);
+    if(t===1){
+      const r=choice([2,3,5,7]); const a=rnd(2,5), b=rnd(2,5);
+      return mk(`¿Cuál es el valor de ${m(tex`${a}\cdot ${b}\sqrt{${r}}`)}?`, m(tex`${a*b}\sqrt{${r}}`), [m(tex`${a+b}\sqrt{${r}}`), m(tex`${a*b}\sqrt{${a*b*r}}`), String(a*b*r)],
+        [`Multiplicamos los coeficientes: ${m(tex`${a}\cdot ${b}=${a*b}`)}.`, `La raíz ${m(tex`\sqrt{${r}}`)} se conserva.`, `Resultado: ${m(tex`${a*b}\sqrt{${r}}`)}.`],
+        "Multiplica los números que están fuera de la raíz; no los metas dentro sin justificar.", {type:"formula", text:m(tex`${a}\cdot ${b}\sqrt{${r}}=${a*b}\sqrt{${r}}`)}, "ops", true, "operatoria con radicales");
+    }
+    if(t===2){
+      const a=choice([10,13,17,20,29]); const b=choice([1,2,3,4,5]); const res=a-b*b;
+      return mk(`¿Cuál es el valor de ${m(tex`(\sqrt{${a}}+${b})(\sqrt{${a}}-${b})`)}?`, String(res), [String(a+b*b), m(tex`${res}\sqrt{${a}}`), String(a)],
+        [`Reconocemos diferencia de cuadrados: ${m(tex`(x+y)(x-y)=x^2-y^2`)}.`, `Aquí ${m(tex`x=\sqrt{${a}}`)} e ${m(tex`y=${b}`)}.`, `Entonces ${m(tex`(\sqrt{${a}})^2-${b}^2=${a}-${b*b}=${res}`)}.`],
+        "Usa la estructura: suma por diferencia.", {type:"formula", text:m(tex`(\sqrt{a}+b)(\sqrt{a}-b)=a-b^2`)}, "ops", true, "producto notable con radicales");
+    }
+    if(t===3){
+      const a=choice([9,16,25,36]); const b=choice([4,9,16,25]); const correct=Math.sqrt(a+b);
+      const sum=Math.sqrt(a)+Math.sqrt(b);
+      const good = Number.isInteger(correct) ? String(correct) : fmtRoot(a+b);
+      return mk(`¿Cuál es la forma correcta de evaluar ${m(tex`\sqrt{${a}+${b}}`)}?`, good, [String(sum), m(tex`\sqrt{${a}}+\sqrt{${b}}`), String(a+b)],
+        [`Primero se resuelve la suma dentro de la raíz: ${m(tex`${a}+${b}=${a+b}`)}.`, `Luego se calcula ${m(tex`\sqrt{${a+b}}`)}.`, `No se puede aplicar ${m(tex`\sqrt{a+b}=\sqrt{a}+\sqrt{b}`)}.`],
+        "La raíz cubre toda la suma. No se separa en dos raíces.", {type:"formula", text:m(tex`\sqrt{a+b}\neq\sqrt{a}+\sqrt{b}`)}, "ops", false, "error frecuente");
+    }
+    if(t===4){
+      const r=choice([2,3,5,7]); const a=rnd(2,7), b=rnd(2,7);
+      return mk(`Calcula ${m(tex`${a}\sqrt{${r}}+${b}\sqrt{${r}}`)}.`, m(tex`${a+b}\sqrt{${r}}`), [m(tex`${a*b}\sqrt{${r}}`), m(tex`${a+b}\sqrt{${2*r}}`), String((a+b)*r)],
+        [`Son radicales semejantes porque tienen la misma raíz.`, `Se suman los coeficientes: ${m(tex`${a}+${b}=${a+b}`)}.`, `Resultado: ${m(tex`${a+b}\sqrt{${r}}`)}.`],
+        "Cuando las raíces son iguales, suma los coeficientes.", {type:"formula", text:m(tex`${a}\sqrt{r}+${b}\sqrt{r}=(${a}+${b})\sqrt{r}`)}, "ops", true, "radicales semejantes");
+    }
+    const r=choice([2,3,5]); const a=choice([4,9,16,25]);
+    return mk(`¿Cuál es el resultado de ${m(tex`\sqrt{${a}}\cdot\sqrt{${r}}`)}?`, m(tex`\sqrt{${a*r}}`), [m(tex`${Math.sqrt(a)}+\sqrt{${r}}`), m(tex`${a}\sqrt{${r}}`), String(a*r)],
+      [`Se usa ${m(tex`\sqrt{a}\cdot\sqrt{b}=\sqrt{ab}`)}.`, `Por tanto, ${m(tex`\sqrt{${a}}\cdot\sqrt{${r}}=\sqrt{${a*r}}`)}.`],
+      "Multiplica las cantidades subradicales si las raíces tienen el mismo índice.", {type:"formula", text:m(tex`\sqrt{a}\cdot\sqrt{b}=\sqrt{ab}`)}, "ops", true, "producto de raíces");
+  }
+
+  function genGeo(){
+    const t=rnd(1,5);
+    if(t===1){
+      const pairs=[[5,12,13],[8,15,17],[9,12,15],[7,24,25],[20,21,29]]; const [a,b,c]=choice(pairs);
+      return mk(`Un triángulo rectángulo tiene catetos de ${a} cm y ${b} cm. ¿Cuánto mide su hipotenusa?`, `${c} cm`, [`${a+b} cm`, `${fmtFullRootDiff(b,a)} cm`, `${a*b} cm`],
+        [`La hipotenusa se calcula sumando cuadrados: ${m(tex`c=\sqrt{${a}^2+${b}^2}`)}.`, `${m(tex`c=\sqrt{${a*a}+${b*b}}=\sqrt{${c*c}}=${c}`)}.`, `La hipotenusa mide ${c} cm.`],
+        "Hipotenusa: suma de cuadrados dentro de una raíz completa.", {type:"triangle", a,b,c, unknown:"c"}, "geo", true, "Pitágoras: hipotenusa");
+    }
+    if(t===2){
+      const triples=[[13,5,12],[17,8,15],[25,7,24],[26,10,24],[29,20,21]]; const [c,b,a]=choice(triples);
+      return mk(`Un triángulo rectángulo tiene hipotenusa de ${c} cm y un cateto de ${b} cm. ¿Cuánto mide el otro cateto?`, `${a} cm`, [`${c-b} cm`, `${c+b} cm`, `${fmtFullRootSum(c,b)} cm`],
+        [`Como se busca un cateto, se restan cuadrados: ${m(tex`a=\sqrt{${c}^2-${b}^2}`)}.`, `${m(tex`a=\sqrt{${c*c}-${b*b}}=\sqrt{${a*a}}=${a}`)}.`],
+        "Cateto faltante: resta de cuadrados dentro de una raíz completa.", {type:"triangle", a,b,c, unknown:"a"}, "geo", true, "Pitágoras: cateto");
+    }
+    if(t===3){
+      const l=choice([5,8,10,12,15]);
+      return mk(`Un cuadrado tiene lado de ${l} cm. ¿Cuál es la medida de su diagonal?`, m(tex`${l}\sqrt{2}\text{ cm}`), [`${2*l} cm`, m(tex`${l}\sqrt{3}\text{ cm}`), `${l*l} cm`],
+        [`La diagonal de un cuadrado divide la figura en dos triángulos rectángulos isósceles.`, `${m(tex`d=\sqrt{${l}^2+${l}^2}=\sqrt{2\cdot ${l}^2}=${l}\sqrt{2}`)}.`],
+        "En un cuadrado, los dos catetos son iguales.", {type:"squareDiag", side:l}, "geo", true, "diagonal de cuadrado");
+    }
+    if(t===4){
+      const l=choice([6,9,11,14]);
+      return mk(`Una caja cúbica tiene arista de ${l} cm. ¿Cuál es la diagonal de una de sus caras?`, m(tex`${l}\sqrt{2}\text{ cm}`), [`${2*l} cm`, m(tex`${l}\sqrt{3}\text{ cm}`), `${l*l} cm`],
+        [`La cara del cubo es un cuadrado de lado ${l} cm.`, `Su diagonal es ${m(tex`d=${l}\sqrt{2}`)}.`],
+        "La pregunta pide diagonal de una cara, no diagonal espacial del cubo.", {type:"cubeFace", side:l}, "geo", true, "diagonal de cara de cubo");
+    }
+    const triples=[[3,4,12,13],[6,8,24,26],[2,6,9,11],[5,12,84,85]]; const [a,b,c,d]=choice(triples);
+    return mk(`Un prisma rectangular tiene aristas de ${a} cm, ${b} cm y ${c} cm. ¿Cuál es su diagonal espacial?`, `${d} cm`, [`${a+b+c} cm`, m(tex`\sqrt{${a*a+b*b}}\text{ cm}`), `${a*b*c} cm`],
+      [`La diagonal espacial se calcula con ${m(tex`D=\sqrt{a^2+b^2+c^2}`)}.`, `${m(tex`D=\sqrt{${a}^2+${b}^2+${c}^2}=\sqrt{${d*d}}=${d}`)}.`],
+      "Usa los tres cuadrados de las aristas.", {type:"prism", a,b,c,d}, "geo", true, "diagonal de prisma");
+  }
+
+  function genMix(){
+    const t=rnd(1,5);
+    if(t===1){
+      const w=choice([45,60,75]); const h=Math.round(w*2/3); const hyp=2*h; const v=Math.round(Math.sqrt(hyp*hyp-h*h));
+      const exact = m(tex`${h}\sqrt{3}\text{ cm}`);
+      return mk(`Una repisa mide ${w} cm de ancho. El cateto horizontal de la escuadra mide ${m(tex`\frac{2}{3}`)} del ancho, y la hipotenusa mide el doble de ese cateto. ¿Cuánto mide el cateto vertical?`, exact, [`${h} cm`, m(tex`${h}\sqrt{2}\text{ cm}`), `${2*h} cm`],
+        [`El cateto horizontal mide ${m(tex`\frac{2}{3}\cdot ${w}=${h}`)} cm.`, `La hipotenusa mide ${m(tex`2\cdot ${h}=${hyp}`)} cm.`, `Cateto vertical: ${m(tex`x=\sqrt{${hyp}^2-${h}^2}=\sqrt{${hyp*hyp-h*h}}=${h}\sqrt{3}`)}.`],
+        "Calcula primero el cateto horizontal; después usa Pitágoras con resta.", {type:"shelf", h, hyp, vtext:tex`${h}\sqrt{3}`}, "mix", true, "escuadra de repisa");
+    }
+    if(t===2){
+      const a=choice([9,12,16,18,24]); const b=choice([12,16,18,24,32]); const c=Math.round(Math.sqrt(a*a+b*b));
+      const isExact = c*c===a*a+b*b;
+      const correct = isExact ? `${c} m` : `${m(tex`\sqrt{${a*a+b*b}}`)} m`;
+      return mk(`Un cable une la parte superior de un poste de ${a} m con un punto del suelo ubicado a ${b} m de la base. ¿Qué expresión o medida representa el largo del cable?`, correct, [`${a+b} m`, `${m(tex`\sqrt{${b}^2-${a}^2}`)} m`, `${a*b} m`],
+        [`El poste y el suelo son catetos; el cable es la hipotenusa.`, `Se usa ${m(tex`c=\sqrt{${a}^2+${b}^2}`)}.`, `El largo es ${correct}.`],
+        "El cable inclinado corresponde a la hipotenusa.", {type:"post", a,b}, "mix", true, "cable y poste");
+    }
+    if(t===3){
+      const x=choice([8,10,12]); const area=x*x/2; const hyp = m(tex`${x}\sqrt{2}\text{ cm}`); const per = m(tex`${2*x}+${x}\sqrt{2}\text{ cm}`);
+      return mk(`Un triángulo rectángulo isósceles tiene área ${area} cm². ¿Cuál es su perímetro?`, per, [hyp, `${2*x} cm`, `${area*2} cm`],
+        [`Si los catetos miden ${m(tex`x`)} y ${m(tex`x`)}, entonces ${m(tex`\frac{x^2}{2}=${area}`)}.`, `Luego ${m(tex`x^2=${area*2}`)} y ${m(tex`x=${x}`)}.`, `La hipotenusa es ${hyp}.`, `Perímetro: ${per}.`],
+        "En un triángulo rectángulo isósceles los catetos son iguales.", {type:"iso", x}, "mix", true, "triángulo rectángulo isósceles");
+    }
+    if(t===4){
+      const accel=choice([8,10,12]); const time=choice([3,4,5]); const dist=accel*time*time/2;
+      return mk(`La distancia recorrida por un móvil está dada por ${m(tex`d(t)=\frac{a\cdot t^2}{2}`)}. Si ${m(tex`a=${accel}\text{ m/s}^2`)} y el móvil recorre ${dist} m, ¿cuánto tiempo demora?`, `${time} s`, [`${dist/accel} s`, `${fmtRoot(dist)} s`, `${time*time} s`],
+        [`Reemplazamos: ${m(tex`${dist}=\frac{${accel}\cdot t^2}{2}`)}.`, `Entonces ${m(tex`${dist}=${accel/2}t^2`)}.`, `Se obtiene ${m(tex`t^2=${time*time}`)} y ${m(tex`t=${time}`)} porque el tiempo es positivo.`],
+        "Despeja primero; no tomes raíz antes de simplificar la ecuación.", {type:"motion", accel, dist, time}, "mix", true, "fórmula con cuadrado");
+    }
+    const p=choice([5,7,9,10]);
+    return mk(`Se sabe que ${m(tex`(x-${p})^2=36`)}. Si ${m(tex`x>${p}`)}, ¿cuál es el valor de ${m(tex`x`)}?`, String(p+6), [String(p-6), String(36+p), String(Math.sqrt(36))],
+      [`Aplicamos raíz cuadrada: ${m(tex`|x-${p}|=6`)}.`, `Como ${m(tex`x>${p}`)}, se cumple ${m(tex`x-${p}=6`)}.`, `Por tanto, ${m(tex`x=${p+6}`)}.`],
+      "Recuerda que la raíz de un cuadrado se expresa con valor absoluto.", {type:"formula", text:m(tex`\sqrt{(x-${p})^2}=|x-${p}|`)}, "mix", true, "raíz como inversa del cuadrado");
+  }
+
+  function genConcept(){
+    const t=rnd(1,5);
+    if(t===1){
+      return mk(`¿Cuál afirmación describe correctamente la raíz cuadrada principal?`, `Es el número real no negativo que al elevarse al cuadrado produce la cantidad subradical.`, [`Es cualquier número que al elevarse al cuadrado produce la cantidad subradical.`, `Siempre entrega dos valores: uno positivo y uno negativo.`, `Solo existe cuando el resultado es un número entero.`],
+        [`El símbolo ${m(tex`\sqrt{a}`)} representa la raíz principal.`, `Por definición, su valor es no negativo.`],
+        "Fíjate en la palabra principal.", {type:"formula", text:m(tex`\sqrt{a}=x,\; x\geq 0`)}, "concept", false, "definición");
+    }
+    if(t===2){
+      return mk(`En un problema con un cable inclinado entre un poste y el suelo, ¿qué suele representar la raíz cuadrada obtenida con Pitágoras?`, `Una longitud.`, [`Un área.`, `Un porcentaje.`, `Una probabilidad.`],
+        [`En geometría, Pitágoras permite calcular longitudes.`, `La raíz aparece al despejar una medida al cuadrado.`],
+        "Piensa qué se mide en metros o centímetros.", {type:"post", a:9, b:12}, "concept", false, "interpretación geométrica");
+    }
+    if(t===3){
+      return mk(`Si buscas la hipotenusa de un triángulo rectángulo con catetos ${m(tex`a`)} y ${m(tex`b`)}, ¿qué operación corresponde?`, m(tex`\sqrt{a^2+b^2}`), [m(tex`\sqrt{a^2-b^2}`), m(tex`a^2+b^2`), m(tex`a+b`)],
+        [`La hipotenusa es el lado opuesto al ángulo recto.`, `Se obtiene sumando los cuadrados de los catetos y aplicando raíz: ${m(tex`c=\sqrt{a^2+b^2}`)}.`],
+        "Hipotenusa = lado más largo; se suman cuadrados.", {type:"triangle", a:6,b:8,c:10,unknown:"c"}, "concept", false, "decisión en Pitágoras");
+    }
+    if(t===4){
+      return mk(`¿Por qué la expresión ${m(tex`\sqrt{9^2+12^2}`)} debe escribirse con barra completa sobre toda la suma?`, `Porque la raíz debe afectar a la suma completa ${m(tex`9^2+12^2`)}.`, [`Porque solo debe afectar al número ${m(tex`9^2`)}.`, `Porque representa una suma de dos raíces.`, `Porque la barra no cambia el significado matemático.`],
+        [`La barra del radical indica exactamente qué expresión está dentro de la raíz.`, `En PAES, la expresión debe leerse como ${m(tex`\sqrt{9^2+12^2}`)}, no como ${m(tex`\sqrt{9^2}+12^2`)}.`],
+        "La barra radical delimita la cantidad subradical.", {type:"formula", text:m(tex`\sqrt{9^2+12^2}`)}, "concept", false, "notación matemática");
+    }
+    return mk(`¿Cuál es el error en afirmar que ${m(tex`\sqrt{16+9}=\sqrt{16}+\sqrt{9}`)}?`, `La raíz de una suma no se separa como suma de raíces.`, [`La raíz de una suma siempre es negativa.`, `La expresión no tiene solución real.`, `El error es que faltó multiplicar por 2.`],
+      [`Se debe resolver primero la suma: ${m(tex`16+9=25`)}.`, `Así, ${m(tex`\sqrt{16+9}=\sqrt{25}=5`)}, mientras que ${m(tex`\sqrt{16}+\sqrt{9}=4+3=7`)}.`],
+      "Compara ambos resultados numéricos.", {type:"formula", text:m(tex`\sqrt{a+b}\neq\sqrt{a}+\sqrt{b}`)}, "concept", false, "error frecuente");
+  }
+
+  function genBoss(){
+    const w=60, h=40, hyp=80;
+    return mk(`Jefe final. Una repisa de Puerto Montt mide ${w} cm de ancho. El tensor forma un triángulo rectángulo: el cateto horizontal mide ${h} cm y la hipotenusa mide ${hyp} cm. Además, se instalará una pieza cuadrada de área ${w*w} cm². ¿Cuál afirmación es correcta?`,
+      `El cateto vertical mide ${m(tex`40\sqrt{3}`)} cm y el lado de la pieza cuadrada mide 60 cm.`,
+      [`El cateto vertical mide 40 cm y el lado de la pieza mide 3600 cm.`, `El cateto vertical mide ${m(tex`\sqrt{80^2+40^2}`)} cm y el lado mide 60 cm.`, `El cateto vertical mide ${m(tex`40\sqrt{2}`)} cm y el lado mide 120 cm.`],
+      [`Para el cateto vertical se usa resta de cuadrados: ${m(tex`x=\sqrt{80^2-40^2}`)}.`, `${m(tex`x=\sqrt{6400-1600}=\sqrt{4800}=40\sqrt{3}`)}.`, `El lado de la pieza cuadrada se obtiene con ${m(tex`l=\sqrt{3600}=60`)}.`, `Conclusión: el cateto vertical mide ${m(tex`40\sqrt{3}`)} cm y el lado mide 60 cm.`],
+      "Se combinan dos ideas: Pitágoras para el tensor y raíz desde área para el cuadrado.", {type:"boss"}, "mix", true, "integración final");
+  }
+
+  function nextQuestionObj(){
+    if(state.mode==="boss") return genBoss();
+    let mod = state.module;
+    if(state.mode==="exam") mod = choice(["fund","ops","geo","mix","concept"]);
+    if(mod==="fund") return genFund();
+    if(mod==="ops") return genOps();
+    if(mod==="geo") return genGeo();
+    if(mod==="mix") return genMix();
+    return genConcept();
+  }
+
+  function renderQuestion(q){
+    current=q; answered=false;
+    $("questionMeta").innerHTML = `<span class="tag ${q.isPAES?'paes':'concept'}">${q.isPAES?'Tipo PAES M1':'Conceptual'}</span><span class="tag">${esc(q.pattern || 'raíz cuadrada')}</span>`;
+    $("questionText").innerHTML = q.prompt;
+    $("options").innerHTML = q.options.map((op,i)=>`<button class="optionBtn" data-opt="${i}"><span class="kbd">${String.fromCharCode(65+i)})</span> ${op}</button>`).join("");
+    $("feedback").innerHTML = "Elige una alternativa para recibir retroalimentación.";
+    $("options").querySelectorAll("button").forEach(btn=>btn.addEventListener("click",()=>answer(Number(btn.dataset.opt))));
+    renderVisual(q.visual);
+    renderExamBar();
+    typeset();
+  }
+
+  function safeVisualFormula(text){
+    const raw = String(text || "");
+    // Evita revelar la respuesta en el panel visual antes de que la estudiante responda.
+    // Si la visualización trae una igualdad numérica generada, se muestra solo el lado izquierdo.
+    const inner = raw.replace(/^\\\(/, "").replace(/\\\)$/, "");
+    if(inner.includes("=") && /\d/.test(inner)){
+      const lhs = inner.split("=")[0].trim();
+      return m(lhs);
+    }
+    return raw;
+  }
+
+  function renderVisual(v){
+    const box=$("visualBox");
+    if(!v){ box.innerHTML="<p>Representa los datos en un dibujo antes de responder.</p>"; return; }
+    if(v.type==="square"){
+      // No revelar el lado antes de responder: el lado suele ser la respuesta.
+      box.innerHTML=`<svg viewBox="0 0 280 240" role="img" aria-label="cuadrado"><rect x="70" y="35" width="140" height="140" fill="#fff8dd" stroke="#0b2857" stroke-width="4" rx="10"/><text x="140" y="110" text-anchor="middle" font-size="24" fill="#0b2857">Área ${v.area}</text><text x="140" y="205" text-anchor="middle" font-size="20" fill="#0b2857">lado ?</text></svg>`; return;
+    }
+    if(v.type==="formula") {
+      box.innerHTML=`<div class="formulaCard" style="font-size:1.4rem;text-align:center">${safeVisualFormula(v.text)}</div>`;
+      return;
+    }
+    if(v.type==="triangle"){
+      // Ocultar el lado desconocido para no anticipar la respuesta.
+      const labelA = v.unknown==='a' ? '?' : `${v.a} cm`;
+      const labelB = v.unknown==='b' ? '?' : `${v.b} cm`;
+      const labelC = v.unknown==='c' ? '?' : `${v.c} cm`;
+      box.innerHTML=`<svg viewBox="0 0 360 260" role="img" aria-label="triángulo rectángulo"><polygon points="55,205 300,205 55,55" fill="#edf7ff" stroke="#0b2857" stroke-width="4"/><path d="M55 180 L80 180 L80 205" fill="none" stroke="#0b2857" stroke-width="3"/><text x="168" y="230" text-anchor="middle" font-size="20">${labelB}</text><text x="28" y="135" text-anchor="middle" font-size="20" transform="rotate(-90 28 135)">${labelA}</text><text x="192" y="118" text-anchor="middle" font-size="20">${labelC}</text></svg>`; return;
+    }
+    if(v.type==="squareDiag"){
+      box.innerHTML=`<svg viewBox="0 0 300 250"><rect x="70" y="40" width="150" height="150" fill="#f4edff" stroke="#0b2857" stroke-width="4"/><line x1="70" y1="190" x2="220" y2="40" stroke="#7d6dcc" stroke-width="5"/><text x="145" y="220" text-anchor="middle" font-size="20">lado ${v.side} cm</text><text x="170" y="110" font-size="20" fill="#7d6dcc">d = ?</text></svg>`; return;
+    }
+    if(v.type==="cubeFace"){
+      box.innerHTML=`<svg viewBox="0 0 330 260"><polygon points="80,80 200,80 240,45 120,45" fill="#fff8dd" stroke="#0b2857" stroke-width="3"/><polygon points="200,80 240,45 240,165 200,200" fill="#edf7ff" stroke="#0b2857" stroke-width="3"/><polygon points="80,80 200,80 200,200 80,200" fill="#f4edff" stroke="#0b2857" stroke-width="3"/><line x1="80" y1="80" x2="200" y2="200" stroke="#7d6dcc" stroke-width="5"/><text x="140" y="225" text-anchor="middle" font-size="18">arista ${v.side} cm</text></svg>`; return;
+    }
+    if(v.type==="prism"){
+      box.innerHTML=`<svg viewBox="0 0 360 260"><rect x="70" y="90" width="170" height="100" fill="#edf7ff" stroke="#0b2857" stroke-width="3"/><polygon points="70,90 120,50 290,50 240,90" fill="#fff8dd" stroke="#0b2857" stroke-width="3"/><polygon points="240,90 290,50 290,150 240,190" fill="#f4edff" stroke="#0b2857" stroke-width="3"/><line x1="70" y1="190" x2="290" y2="50" stroke="#7d6dcc" stroke-width="5"/><text x="145" y="215" font-size="17">${v.b} cm</text><text x="48" y="145" font-size="17">${v.a} cm</text><text x="268" y="185" font-size="17">${v.c} cm</text></svg>`; return;
+    }
+    if(v.type==="shelf"){
+      box.innerHTML=`<svg viewBox="0 0 360 240"><line x1="70" y1="70" x2="270" y2="70" stroke="#0b2857" stroke-width="10"/><line x1="70" y1="70" x2="70" y2="190" stroke="#0b2857" stroke-width="8"/><line x1="70" y1="190" x2="270" y2="70" stroke="#7d6dcc" stroke-width="6"/><text x="175" y="55" text-anchor="middle" font-size="18">cateto ${v.h} cm</text><text x="42" y="135" font-size="18" transform="rotate(-90 42 135)">vertical ?</text><text x="190" y="150" font-size="18" fill="#7d6dcc">hip. ${v.hyp} cm</text></svg>`; return;
+    }
+    if(v.type==="post"){
+      box.innerHTML=`<svg viewBox="0 0 340 250"><line x1="80" y1="200" x2="270" y2="200" stroke="#0b2857" stroke-width="4"/><line x1="80" y1="200" x2="80" y2="60" stroke="#0b2857" stroke-width="8"/><line x1="80" y1="60" x2="270" y2="200" stroke="#7d6dcc" stroke-width="5"/><text x="175" y="224" text-anchor="middle" font-size="18">${v.b} m</text><text x="50" y="135" font-size="18" transform="rotate(-90 50 135)">${v.a} m</text><text x="190" y="120" fill="#7d6dcc" font-size="18">cable</text></svg>`; return;
+    }
+    if(v.type==="iso"){
+      box.innerHTML=`<svg viewBox="0 0 330 250"><polygon points="70,190 250,190 70,10" fill="#edf7ff" stroke="#0b2857" stroke-width="4"/><path d="M70 165 L95 165 L95 190" fill="none" stroke="#0b2857" stroke-width="3"/><text x="158" y="215" text-anchor="middle" font-size="18">x</text><text x="44" y="100" font-size="18" transform="rotate(-90 44 100)">x</text><text x="168" y="92" font-size="18">x√2</text></svg>`; return;
+    }
+    if(v.type==="motion"){
+      box.innerHTML=`<svg viewBox="0 0 360 220"><line x1="45" y1="160" x2="315" y2="160" stroke="#0b2857" stroke-width="4"/><circle cx="100" cy="140" r="18" fill="#7d6dcc"/><rect x="75" y="112" width="70" height="28" rx="8" fill="#2f9f9a"/><circle cx="100" cy="162" r="8" fill="#0b2857"/><circle cx="135" cy="162" r="8" fill="#0b2857"/><path d="M160 130 C210 110, 250 110, 300 130" fill="none" stroke="#7d6dcc" stroke-width="4" stroke-dasharray="8 8"/><text x="180" y="70" text-anchor="middle" font-size="20">d(t)=a·t²/2</text></svg>`; return;
+    }
+    if(v.type==="boss"){
+      box.innerHTML=`<svg viewBox="0 0 360 260"><rect x="38" y="28" width="120" height="120" fill="#fff8dd" stroke="#0b2857" stroke-width="4"/><text x="98" y="95" text-anchor="middle" font-size="18">Área 3600</text><line x1="205" y1="60" x2="315" y2="60" stroke="#0b2857" stroke-width="8"/><line x1="205" y1="60" x2="205" y2="200" stroke="#0b2857" stroke-width="6"/><line x1="205" y1="200" x2="315" y2="60" stroke="#7d6dcc" stroke-width="5"/><text x="260" y="45" font-size="16">40 cm</text><text x="267" y="145" fill="#7d6dcc" font-size="16">80 cm</text></svg>`; return;
+    }
+    box.innerHTML="<p>Dibuja la situación y marca los datos.</p>";
+  }
+
+  function newQuestion(){
+    const q = nextQuestionObj();
+    renderQuestion(q);
+  }
+  function showHint(){
+    if(!current) return;
+    const cost = modes[state.mode]?.hintCost || 0;
+    if(cost>0){
+      if(state.coins < cost){ $("feedback").innerHTML = "Necesitas más monedas para usar una pista en este modo. Puedes volver a práctica para entrenar."; return; }
+      state.coins -= cost;
+    }
+    $("feedback").innerHTML = `<b>Pista:</b> ${current.hint}`;
+    renderStats(); typeset();
+  }
+  function showSolution(){
+    if(!current) return;
+    $("feedback").innerHTML = `<div class="answerExplain"><b>Desarrollo paso a paso</b><ol>${current.explanation.map(s=>`<li>${s}</li>`).join("")}</ol></div>`;
+    typeset();
+  }
+  function answer(idx){
+    if(!current || answered) return;
+    answered=true;
+    const correct = idx===current.answer;
+    const buttons = $("options").querySelectorAll("button");
+    buttons.forEach((btn,i)=>{ if(i===current.answer) btn.classList.add("correct"); if(i===idx && !correct) btn.classList.add("wrong"); btn.disabled=true; });
+    const pts = modes[state.mode]?.points || 10;
+    if(correct){
+      state.correct++; state.streak++; state.coins += 2 + Math.floor(state.streak/3); state.xp += pts + Math.min(10,state.streak);
+      state.byModule[current.module].c++;
+      $("feedback").innerHTML = `<b>Correcto.</b><div class="answerExplain"><ol>${current.explanation.map(s=>`<li>${s}</li>`).join("")}</ol></div>`;
+      if(state.mode==="boss") addBadge("Desafío final superado");
+      if(exam.active) exam.correct++;
+    } else {
+      state.wrong++; state.streak=0; state.byModule[current.module].w++;
+      if(state.mode==="survival") state.lives=Math.max(0,state.lives-1);
+      $("feedback").innerHTML = `<b>Revisa el procedimiento.</b> La alternativa correcta es <b>${String.fromCharCode(65+current.answer)})</b>.<div class="answerExplain"><ol>${current.explanation.map(s=>`<li>${s}</li>`).join("")}</ol></div>`;
+      if(exam.active) exam.wrong++;
+    }
+    if(exam.active){
+      exam.index++;
+      if(exam.index>=exam.total){ finishExam(); }
+    }
+    renderStats(); renderExamBar(); typeset();
+    if(state.mode==="survival" && state.lives===0){
+      $("feedback").innerHTML += `<p><b>Fin de supervivencia.</b> Vuelve a práctica para recuperar seguridad y luego reinicia el modo.</p>`;
+    }
+  }
+
+  function startExam(){
+    stopExam(false);
+    exam.active=true; exam.total=12; exam.index=0; exam.correct=0; exam.wrong=0; exam.seconds=20*60;
+    exam.timer=setInterval(()=>{ exam.seconds--; renderExamBar(); if(exam.seconds<=0) finishExam(); },1000);
+  }
+  function stopExam(clear=true){
+    if(exam.timer) clearInterval(exam.timer);
+    exam.timer=null;
+    if(clear) exam.active=false;
+  }
+  function renderExamBar(){
+    const bar=$("examBar");
+    if(!exam.active){ bar.style.display="none"; bar.textContent=""; return; }
+    bar.style.display="block";
+    const mm=String(Math.floor(exam.seconds/60)).padStart(2,"0"), ss=String(exam.seconds%60).padStart(2,"0");
+    bar.textContent = `Modo examen: pregunta ${Math.min(exam.index+1,exam.total)} de ${exam.total} · tiempo ${mm}:${ss} · correctas ${exam.correct}`;
+  }
+  function finishExam(){
+    stopExam(false); exam.active=false;
+    const pct = Math.round(exam.correct/exam.total*100);
+    if(pct>=70){ addBadge("Examen sólido"); state.xp+=80; state.coins+=10; }
+    $("feedback").innerHTML = `<b>Reporte final de examen.</b><br>Resultado: ${exam.correct} correctas de ${exam.total} (${pct}%).<br>${pct>=70?'Buen dominio general. Intenta jefe final.':'Conviene reforzar el módulo con menor precisión antes de repetir el examen.'}`;
+    renderStats(); renderExamBar(); typeset();
+  }
+
+  function renderAll(){
+    renderStats(); renderSelectors(); $("lessonPanel").innerHTML=lessonHTML(); typeset();
+  }
+
+  $("newQuestionBtn").addEventListener("click", newQuestion);
+  $("hintBtn").addEventListener("click", showHint);
+  $("showSolutionBtn").addEventListener("click", showSolution);
+  $("studentName").addEventListener("input", e=>{ state.name=e.target.value; saveState(); });
+  $("fontMinus").addEventListener("click",()=>{ state.fontScale=Math.max(.85, +(state.fontScale-.08).toFixed(2)); renderStats(); });
+  $("fontPlus").addEventListener("click",()=>{ state.fontScale=Math.min(1.35, +(state.fontScale+.08).toFixed(2)); renderStats(); });
+  $("contrastBtn").addEventListener("click",()=>{ state.highContrast=!state.highContrast; renderStats(); });
+  $("resetBtn").addEventListener("click",()=>{ if(confirm("¿Reiniciar el progreso guardado en este dispositivo?")){ localStorage.removeItem("paesRootsAppState"); state={...defaultState}; stopExam(); renderAll(); newQuestion(); }});
+  $("readBtn").addEventListener("click",()=>{
+    if(!current || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const plain = $("questionText").textContent.replace(/\\\(|\\\)/g, " ");
+    const utter = new SpeechSynthesisUtterance(plain); utter.lang="es-CL"; utter.rate=.92; window.speechSynthesis.speak(utter);
+  });
+
+  initRain(); renderAll(); newQuestion();
+})();
+</script>
+</body>
+</html>
