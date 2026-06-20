@@ -1,2 +1,2 @@
-# paes-m1-raices
+# paes-m1-raicescuadradas
 Preparación PAES M1 raíces 
